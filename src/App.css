@@ -1,853 +1,188 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Play, Award, Shield, Users, MapPin, Phone, Mail, X, CheckCircle, 
-  ExternalLink, Clock, ChevronRight, Menu, MessageCircle, User, 
-  ChevronDown, Camera, Wrench, ArrowLeft, FileCheck, Instagram, Sprout
-} from 'lucide-react';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-// --- [브이톨테크 공식 데이터 세팅 - 밝은 톤 테마 및 커스텀 메뉴 구조] ---
-const droneData = {
-  company: {
-    name: "(주)브이톨테크 드론교육원",
-    ceo: "정재영",
-    slogan: "미래 무인항공을 이끄는 VTOL & 드론 전문 교육기관",
-    cert: "국토교통부 지정 전문교육기관",
-    location: "경남 창원시 마산회원구 구암서3길 50-1, 102호 (본원)",
-    fieldAddress: "경상남도 창원시 마산회원구 내서읍 함마대로 일원 (자체 실기 비행장)",
-    phone: "010-4689-7548",
-    email: "vtoltech@naver.com",
-    kakaoUrl: "https://open.kakao.com/o/s5lQENYg",
-    instagram: "@vtoltech_drone",
-    instaUrl: "https://www.instagram.com/vtoltech_drone/",
-    logoImg: "회사로고.png",
-    logoImgFallback: "image_0f700e.jpg"
-  },
-  
-  // 상단 2단계 카테고리 메뉴 세팅
-  navCategories: [
-    {
-      id: "company",
-      title: "회사소개",
-      subMenus: [
-        { name: "대표 인사말", pageId: "ceo" },
-        { name: "교육원 특징", pageId: "about" },
-        { name: "인증 현황", pageId: "cert" },
-        { name: "홍보 및 비행 영상", pageId: "media" },
-        { name: "찾아오시는 길", pageId: "location" }
-      ]
-    },
-    {
-      id: "edu",
-      title: "드론교육",
-      subMenus: [
-        { name: "VTOL 특화 과정", pageId: "edu-vtol" },
-        { name: "국가자격증 과정", pageId: "edu-national" },
-        { name: "지도조종자(교관) 과정", pageId: "edu-instructor" },
-        { name: "자체 실기 시험장", pageId: "edu-field" }
-      ]
-    },
-    {
-      id: "business",
-      title: "사업분야",
-      subMenus: [
-        { name: "드론 교육", pageId: "biz-edu" },
-        { name: "농업 방제 드론 운용", pageId: "biz-agri" },
-        { name: "항공 촬영 영상제작", pageId: "biz-aerial" },
-        { name: "드론 판매 & 기체 정비", pageId: "biz-maintenance" }
-      ]
-    },
-    {
-      id: "contact",
-      title: "실시간 상담",
-      subMenus: [
-        { name: "오픈카톡 1:1 실시간 상담", externalUrl: "https://open.kakao.com/o/s5lQENYg" },
-        { name: "인스타그램 DM 문의", externalUrl: "https://www.instagram.com/vtoltech_drone/" }
-      ]
+.counter {
+  font-size: 16px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+  margin-bottom: 24px;
+
+  &:hover {
+    border-color: var(--accent-border);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.hero {
+  position: relative;
+
+  .base,
+  .framework,
+  .vite {
+    inset-inline: 0;
+    margin: 0 auto;
+  }
+
+  .base {
+    width: 170px;
+    position: relative;
+    z-index: 0;
+  }
+
+  .framework,
+  .vite {
+    position: absolute;
+  }
+
+  .framework {
+    z-index: 1;
+    top: 34px;
+    height: 28px;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
+      scale(1.4);
+  }
+
+  .vite {
+    z-index: 0;
+    top: 107px;
+    height: 26px;
+    width: auto;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
+      scale(0.8);
+  }
+}
+
+#center {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  place-content: center;
+  place-items: center;
+  flex-grow: 1;
+
+  @media (max-width: 1024px) {
+    padding: 32px 20px 24px;
+    gap: 18px;
+  }
+}
+
+#next-steps {
+  display: flex;
+  border-top: 1px solid var(--border);
+  text-align: left;
+
+  & > div {
+    flex: 1 1 0;
+    padding: 32px;
+    @media (max-width: 1024px) {
+      padding: 24px 20px;
     }
-  ],
+  }
 
-  // 교육과정 상세 데이터
-  courses: [
-    {
-      id: "edu-vtol",
-      cat: "VTOL 특화",
-      title: "무인수직이착륙기(VTOL) 운용 과정",
-      hours: "실무 집중 / 장거리 순항",
-      target: "측량, 정찰, 공간정보 수집, 특수 산업용",
-      desc: "수직이착륙의 편의성과 고정익의 고속 장거리 순항 능력을 결합한 차세대 VTOL 무인기 전문 조종자 양성 과정입니다.",
-      features: ["수직 이착륙 및 고속 순항 자동 제어", "지상통제소(GCS) 자동 항법 및 미션 플래닝", "1:1 베테랑 전문가 전담 밀착 코칭", "실전 특수 미션(측량, 정찰) 드론 운용"]
-    },
-    {
-      id: "edu-national",
-      cat: "국가자격증",
-      title: "1종 & 2종 무인멀티콥터 조종자",
-      hours: "비행경력 10시간~20시간",
-      target: "취업, 농업 방제, 대형 산업용 드론, 공공기관",
-      desc: "국토교통부 지정 전문교육기관으로, 익숙한 자체 실기 비행장에서 지도조종자의 지도하에 높은 합격률로 국가자격증을 취득합니다.",
-      features: ["자체 시험장에서 실기 시험 직접 응시", "최신 인프라 및 전용 기체 완비", "평일반 / 주말반 / 맞춤 일정 지원", "이론 및 비행 시뮬레이터 교육 무료 제공"]
-    },
-    {
-      id: "edu-instructor",
-      cat: "전문가과정",
-      title: "지도조종자(교관) 및 실기평가 과정",
-      hours: "비행경력 100시간 이상",
-      target: "드론 교관 취업, 교육원 창업, 전문 평가관",
-      desc: "드론 전문가로서 교육생을 지도하고 평가할 수 있는 상위 자격 과정으로, 실기평가 대비 특강 및 비행 교수법을 지도합니다.",
-      features: ["100시간 비행 경력 증명 인정", "실기평가관 출신 교관의 노하우 집중 전수", "자격 취득 후 취업 및 교육원 창업 연계", "비행 교수법 및 교관 교육 실무 연수"]
+  .icon {
+    margin-bottom: 16px;
+    width: 22px;
+    height: 22px;
+  }
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+#docs {
+  border-right: 1px solid var(--border);
+
+  @media (max-width: 1024px) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+#next-steps ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  margin: 32px 0 0;
+
+  .logo {
+    height: 18px;
+  }
+
+  a {
+    color: var(--text-h);
+    font-size: 16px;
+    border-radius: 6px;
+    background: var(--social-bg);
+    display: flex;
+    padding: 6px 12px;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: box-shadow 0.3s;
+
+    &:hover {
+      box-shadow: var(--shadow);
     }
-  ],
-
-  // 사업 분야 개요
-  businessAreas: [
-    {
-      id: "biz-edu",
-      icon: Users,
-      title: "드론 교육",
-      desc: "국토교통부 지정 전문 교육기관으로서 1종~2종 국가자격증, VTOL 수직이착륙기 및 지도조종자(교관) 인재 양성 교육을 수행합니다."
-    },
-    {
-      id: "biz-agri",
-      icon: Sprout,
-      title: "농업 방제 드론 운용",
-      desc: "고성능 농업용 드론을 활용한 정밀 분무 방제, 비하 방지 대책 및 농가 맞춤형 방제 위탁 솔루션을 제공합니다."
-    },
-    {
-      id: "biz-aerial",
-      icon: Camera,
-      title: "항공 촬영 영상제작",
-      desc: "초고화질 4K/8K 카메라 및 짐벌 시스템을 탑재하여 홍보용 영상, 건설 현장 모니터링, 방송용 항공 촬영 프로젝트를 수행합니다."
-    },
-    {
-      id: "biz-maintenance",
-      icon: Wrench,
-      title: "드론 판매 & 기체 정비",
-      desc: "산업용/교육용 정품 드론 기체 유통 및 전문 정비 교관의 기체 커스터마이징, 정기 점검, 수리 서비스를 제공합니다."
+    .button-icon {
+      height: 18px;
+      width: 18px;
     }
-  ],
+  }
 
-  // 홍보 영상 데이터
-  promoVideos: [
-    {
-      id: "dYZg47ddagM",
-      title: "브이톨테크 드론교육원 공식 홍보영상",
-      category: "공식 홍보",
-      desc: "최첨단 VTOL 기체 및 넓은 자체 실기 비행장 전경 안내"
-    },
-    {
-      id: "sjpUFz-6ZHc",
-      title: "VTOL 무인 수직이착륙기 실전 비행 시연",
-      category: "VTOL 특화",
-      desc: "장거리 순항 및 정밀 제어 VTOL 드론 교육 현장"
-    },
-    {
-      id: "Bn20JEiJdC4",
-      title: "산업용 드론 및 특수 미션 운용 시연",
-      category: "산업/특수",
-      desc: "고성능 센서 탑재 특수 드론 및 위탁 교육 과정"
-    },
-    {
-      id: "GCYPEc71zBY",
-      title: "드론 국가자격증 실기 시험장 코스 비행",
-      category: "자격증 실기",
-      desc: "자체 시험장에서의 1:1 밀착 코칭 및 실기 코스 연습"
+  @media (max-width: 1024px) {
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    li {
+      flex: 1 1 calc(50% - 8px);
     }
-  ]
-};
 
-export default function App() {
-  const [currentPage, setCurrentPage] = useState('home');
-  const [selectedVideo, setSelectedVideo] = useState(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [hoveredNav, setHoveredNav] = useState(null);
-  const [expandedMobileCategory, setExpandedMobileCategory] = useState(null);
-  const [logoSrc, setLogoSrc] = useState(droneData.company.logoImg);
-
-  // URL Hash(#) 변경 감지 및 라우팅 동기화
-  useEffect(() => {
-    const syncRouteFromHash = () => {
-      const rawHash = window.location.hash.replace('#', '');
-      const pageTarget = rawHash.trim() === '' ? 'home' : rawHash;
-      setCurrentPage(pageTarget);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    syncRouteFromHash();
-    window.addEventListener('hashchange', syncRouteFromHash);
-    return () => window.removeEventListener('hashchange', syncRouteFromHash);
-  }, []);
-
-  // 페이지 이동 처리 핸들러
-  const handleNavigate = (pageId, externalUrl = null) => {
-    if (externalUrl) {
-      window.open(externalUrl, '_blank');
-      return;
+    a {
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
     }
-    window.location.hash = pageId === 'home' ? '' : `#${pageId}`;
-    setMobileMenuOpen(false);
-    setHoveredNav(null);
-  };
+  }
+}
 
-  // 대분류 카테고리 클릭 시 첫 번째 서브페이지로 이동
-  const handleCategoryClick = (cat) => {
-    if (cat.subMenus && cat.subMenus.length > 0) {
-      const firstSub = cat.subMenus[0];
-      handleNavigate(firstSub.pageId, firstSub.externalUrl);
-    }
-  };
+#spacer {
+  height: 88px;
+  border-top: 1px solid var(--border);
+  @media (max-width: 1024px) {
+    height: 48px;
+  }
+}
 
-  // 이미지 에러 시 대체 로고 처리
-  const handleLogoError = () => {
-    if (logoSrc === droneData.company.logoImg) {
-      setLogoSrc(droneData.company.logoImgFallback);
-    } else {
-      setLogoSrc(null); // 둘 다 로드 안 되면 텍스트 로고로 전환
-    }
-  };
+.ticks {
+  position: relative;
+  width: 100%;
 
-  // 현재 서브페이지의 카테고리 정보 가져오기
-  const currentNavContext = useMemo(() => {
-    if (currentPage === 'home') return null;
-    for (const cat of droneData.navCategories) {
-      const match = cat.subMenus.find(sub => sub.pageId === currentPage);
-      if (match) {
-        return {
-          categoryTitle: cat.title,
-          activeSubName: match.name,
-          subMenus: cat.subMenus
-        };
-      }
-    }
-    return {
-      categoryTitle: "상세 안내",
-      activeSubName: "페이지",
-      subMenus: []
-    };
-  }, [currentPage]);
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -4.5px;
+    border: 5px solid transparent;
+  }
 
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans break-keep selection:bg-sky-600 selection:text-white">
-      
-      {/* --- [1. 상단 내비게이션 바] --- */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          
-          {/* 로고 영역 (업로드 로고 이미지 적용) */}
-          <button onClick={() => handleNavigate('home')} className="flex items-center gap-3 group text-left">
-            {logoSrc ? (
-              <img 
-                src={logoSrc} 
-                alt={droneData.company.name} 
-                className="h-10 md:h-12 w-auto object-contain max-w-[200px]"
-                onError={handleLogoError}
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-blue-700 flex items-center justify-center text-white font-black text-xl shadow-md">
-                V
-              </div>
-            )}
-            <div>
-              <span className="text-lg md:text-xl font-black tracking-wider text-slate-900 block leading-none">VTOL TECH</span>
-              <span className="text-[10px] text-sky-600 font-bold uppercase tracking-widest block mt-1">드론교육원</span>
-            </div>
-          </button>
-
-          {/* 데스크톱 메인 드롭다운 내비게이션 */}
-          <nav className="hidden lg:flex items-center gap-2 h-full">
-            <button 
-              onClick={() => handleNavigate('home')}
-              className={`px-4 py-2 font-bold text-sm transition-colors ${currentPage === 'home' ? 'text-sky-600 font-black' : 'text-slate-700 hover:text-sky-600'}`}
-            >
-              홈
-            </button>
-
-            {droneData.navCategories.map((cat) => (
-              <div
-                key={cat.id}
-                className="relative h-full flex items-center px-2"
-                onMouseEnter={() => setHoveredNav(cat.id)}
-                onMouseLeave={() => setHoveredNav(null)}
-              >
-                <button 
-                  onClick={() => handleCategoryClick(cat)}
-                  className="flex items-center gap-1.5 font-bold text-sm text-slate-700 hover:text-sky-600 py-2 transition-colors"
-                >
-                  <span>{cat.title}</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${hoveredNav === cat.id ? 'rotate-180 text-sky-600' : 'text-slate-400'}`} />
-                </button>
-
-                {/* hover 시 펼쳐지는 서브메뉴 카드 */}
-                {hoveredNav === cat.id && (
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-56 bg-white border border-slate-200 rounded-2xl p-2 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="py-1">
-                      {cat.subMenus.map((sub, sIdx) => (
-                        <button
-                          key={sIdx}
-                          onClick={() => handleNavigate(sub.pageId, sub.externalUrl)}
-                          className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-between group ${
-                            currentPage === sub.pageId 
-                              ? 'bg-sky-50 text-sky-700 font-bold' 
-                              : 'text-slate-700 hover:text-sky-700 hover:bg-slate-50'
-                          }`}
-                        >
-                          <span>{sub.name}</span>
-                          <ChevronRight className={`w-3.5 h-3.5 transition-opacity ${currentPage === sub.pageId ? 'opacity-100 text-sky-600' : 'opacity-0 group-hover:opacity-100 text-slate-400'}`} />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </nav>
-
-          {/* 우측 상단 빠른 연락처 버튼 */}
-          <div className="hidden lg:flex items-center gap-3">
-            <a 
-              href={droneData.company.kakaoUrl} 
-              target="_blank" 
-              rel="noreferrer" 
-              className="flex items-center gap-2 text-xs font-bold text-amber-800 bg-amber-50 px-4 py-2.5 rounded-xl border border-amber-200 hover:bg-amber-100 transition-all shadow-sm"
-            >
-              <MessageCircle className="w-4 h-4 fill-amber-500 text-transparent" />
-              <span>오픈카톡 상담</span>
-            </a>
-            <a 
-              href={`tel:${droneData.company.phone}`} 
-              className="flex items-center gap-2 text-xs font-bold text-sky-700 bg-sky-50 px-4 py-2.5 rounded-xl border border-sky-200 hover:bg-sky-100 transition-all"
-            >
-              <Phone className="w-4 h-4" />
-              <span>{droneData.company.phone}</span>
-            </a>
-          </div>
-
-          {/* 모바일 메뉴 토글 버튼 */}
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 text-slate-700 hover:text-slate-900 rounded-xl bg-slate-100 border border-slate-200"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-
-        {/* 모바일 메뉴 드롭다운 */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden bg-white border-b border-slate-200 px-6 py-4 space-y-3 font-semibold text-slate-700 max-h-[80vh] overflow-y-auto">
-            <button 
-              onClick={() => handleNavigate('home')} 
-              className="w-full text-left py-2 font-bold text-sky-600 text-base border-b border-slate-100"
-            >
-              🏠 메인 홈으로 이동
-            </button>
-
-            {droneData.navCategories.map((cat) => (
-              <div key={cat.id} className="border-b border-slate-100 pb-2 last:border-0">
-                <div className="flex items-center justify-between py-2 text-left font-bold text-slate-900 text-base">
-                  <button 
-                    onClick={() => handleCategoryClick(cat)}
-                    className="hover:text-sky-600 transition-colors"
-                  >
-                    {cat.title}
-                  </button>
-                  <button 
-                    onClick={() => setExpandedMobileCategory(expandedMobileCategory === cat.id ? null : cat.id)}
-                    className="p-1 text-slate-400"
-                  >
-                    <ChevronDown className={`w-4 h-4 transition-transform ${expandedMobileCategory === cat.id ? 'rotate-180 text-sky-600' : ''}`} />
-                  </button>
-                </div>
-
-                {expandedMobileCategory === cat.id && (
-                  <div className="pl-4 py-2 space-y-2 bg-slate-50 rounded-xl my-1">
-                    {cat.subMenus.map((sub, sIdx) => (
-                      <button
-                        key={sIdx}
-                        onClick={() => handleNavigate(sub.pageId, sub.externalUrl)}
-                        className={`w-full text-left py-1.5 text-xs font-medium block ${
-                          currentPage === sub.pageId ? 'text-sky-600 font-bold' : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        • {sub.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-
-            <div className="pt-2 flex flex-col gap-2">
-              <a 
-                href={droneData.company.kakaoUrl} 
-                target="_blank" 
-                rel="noreferrer"
-                className="w-full py-3 text-center text-amber-800 bg-amber-50 border border-amber-200 rounded-xl font-bold text-sm block"
-              >
-                오픈카카오톡 1:1 실시간 상담
-              </a>
-              <a 
-                href={droneData.company.instaUrl} 
-                target="_blank" 
-                rel="noreferrer"
-                className="w-full py-3 text-center text-pink-800 bg-pink-50 border border-pink-200 rounded-xl font-bold text-sm block"
-              >
-                인스타그램 DM 문의하기
-              </a>
-            </div>
-          </div>
-        )}
-      </header>
-
-      {/* --- [2. 유튜브 비디오 팝업 모달] --- */}
-      {selectedVideo && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-4xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50">
-              <div>
-                <span className="text-xs font-bold text-sky-600 uppercase tracking-wider">{selectedVideo.category}</span>
-                <h3 className="text-lg font-bold text-slate-900 mt-0.5">{selectedVideo.title}</h3>
-              </div>
-              <button 
-                onClick={() => setSelectedVideo(null)}
-                className="p-2 bg-white hover:bg-slate-200 text-slate-600 rounded-full transition-all border border-slate-200"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="relative aspect-video w-full bg-black">
-              <iframe
-                className="w-full h-full"
-                src={`https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1`}
-                title={selectedVideo.title}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- [3. 메인 랜딩 화면 (currentPage === 'home')] --- */}
-      {currentPage === 'home' && (
-        <>
-          {/* Hero Section */}
-          <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden border-b border-slate-200 py-20 bg-slate-900">
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-900/75 to-slate-900/40 z-10" />
-            
-            {/* 메인 유튜브 배너 비디오 */}
-            <div className="absolute inset-0 w-full h-full opacity-40 pointer-events-none overflow-hidden flex items-center justify-center">
-              <iframe
-                className="w-[160%] h-[160%] min-w-[100vw] min-h-[100vh] object-cover scale-110 pointer-events-none"
-                src={`https://www.youtube.com/embed/${droneData.promoVideos[0].id}?autoplay=1&mute=1&loop=1&playlist=${droneData.promoVideos[0].id}&controls=0&showinfo=0&rel=0&disablekb=1&modestbranding=1`}
-                title="Main Hero Video"
-                frameBorder="0"
-              />
-            </div>
-
-            <div className="relative z-20 max-w-6xl mx-auto px-6 w-full text-white">
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-sky-500/20 border border-sky-400/40 text-sky-300 rounded-full text-xs font-bold tracking-widest uppercase mb-6">
-                <Award className="w-4 h-4" /> {droneData.company.cert}
-              </span>
-              
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-normal md:leading-tight mb-8">
-                <span className="block mb-3 sm:mb-4">미래를 날리는 전문 조종자,</span>
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-sky-400 to-blue-400 mt-2">
-                  {droneData.company.name}
-                </span>
-              </h1>
-
-              <p className="text-slate-200 text-base sm:text-lg md:text-xl max-w-2xl mb-10 leading-relaxed font-medium">
-                {droneData.company.slogan}. 자체 실기 시험장과 최신 VTOL 기체 완비로 최상위 합격률을 약속합니다.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <button 
-                  onClick={() => setSelectedVideo(droneData.promoVideos[0])}
-                  className="px-8 py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-all flex items-center gap-3 shadow-lg shadow-sky-600/30 hover:-translate-y-0.5"
-                >
-                  <Play className="w-5 h-5 fill-current" /> 홍보영상 시청
-                </button>
-                <a 
-                  href={droneData.company.kakaoUrl} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="px-8 py-4 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 font-bold rounded-xl transition-all flex items-center gap-2 backdrop-blur-md"
-                >
-                  <MessageCircle className="w-5 h-5 fill-amber-300 text-transparent" />
-                  <span>오픈카톡 상담 연결</span>
-                </a>
-              </div>
-            </div>
-          </section>
-
-          {/* 주요 강점 카드 미리보기 */}
-          <section className="py-20 bg-white border-b border-slate-200">
-            <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-8">
-              <div 
-                onClick={() => handleNavigate('about')}
-                className="p-8 bg-slate-50 border border-slate-200 rounded-3xl hover:border-sky-500 hover:shadow-md transition-all cursor-pointer group"
-              >
-                <Award className="w-10 h-10 text-sky-600 mb-6 group-hover:scale-110 transition-transform" />
-                <h3 className="text-xl font-bold mb-2 text-slate-900">자체 시험장 높은 합격률</h3>
-                <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                  연습하던 환경 그대로 자체 비행장에서 시험을 치러 수강생의 최상위 합격률을 보장합니다.
-                </p>
-                <span className="text-xs font-bold text-sky-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  특징 자세히 보기 <ChevronRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-
-              <div 
-                onClick={() => handleNavigate('edu-vtol')}
-                className="p-8 bg-slate-50 border border-slate-200 rounded-3xl hover:border-sky-500 hover:shadow-md transition-all cursor-pointer group"
-              >
-                <Users className="w-10 h-10 text-sky-600 mb-6 group-hover:scale-110 transition-transform" />
-                <h3 className="text-xl font-bold mb-2 text-slate-900">VTOL 전문 1:1 코칭</h3>
-                <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                  일반 멀티콥터 외 차세대 무인수직이착륙기(VTOL) 운용 기술 및 베테랑 교관 1:1 전담 마크.
-                </p>
-                <span className="text-xs font-bold text-sky-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  교육과정 자세히 보기 <ChevronRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-
-              <div 
-                onClick={() => handleNavigate('biz-edu')}
-                className="p-8 bg-slate-50 border border-slate-200 rounded-3xl hover:border-sky-500 hover:shadow-md transition-all cursor-pointer group"
-              >
-                <Shield className="w-10 h-10 text-sky-600 mb-6 group-hover:scale-110 transition-transform" />
-                <h3 className="text-xl font-bold mb-2 text-slate-900">다양한 사업 솔루션</h3>
-                <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                  드론 전문 교육부터 농업 방제, 항공 촬영 제작, 드론 판매 및 정비 서비스까지 원스톱 제공.
-                </p>
-                <span className="text-xs font-bold text-sky-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  사업분야 자세히 보기 <ChevronRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </div>
-          </section>
-        </>
-      )}
-
-      {/* --- [4. 서브페이지 레이아웃] --- */}
-      {currentPage !== 'home' && currentNavContext && (
-        <div className="animate-in fade-in duration-300">
-          
-          {/* 서브페이지 상단 배너 헤더 */}
-          <div className="relative py-16 bg-gradient-to-b from-sky-50 via-white to-slate-50 border-b border-slate-200">
-            <div className="relative max-w-6xl mx-auto px-6">
-              
-              {/* 빵부수기 (Breadcrumb) */}
-              <div className="flex items-center gap-2 text-xs text-slate-500 mb-4 font-semibold">
-                <button onClick={() => handleNavigate('home')} className="hover:text-sky-600 flex items-center gap-1">
-                  홈
-                </button>
-                <ChevronRight className="w-3 h-3 text-slate-400" />
-                <span className="text-slate-700">{currentNavContext.categoryTitle}</span>
-                <ChevronRight className="w-3 h-3 text-slate-400" />
-                <span className="text-sky-600 font-bold">{currentNavContext.activeSubName}</span>
-              </div>
-
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                  <span className="text-xs font-bold text-sky-600 uppercase tracking-widest block mb-2">{currentNavContext.categoryTitle}</span>
-                  <h1 className="text-3xl md:text-4xl font-black text-slate-900">{currentNavContext.activeSubName}</h1>
-                </div>
-
-                <button 
-                  onClick={() => handleNavigate('home')}
-                  className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-4 py-2.5 rounded-xl transition-all shadow-sm self-start md:self-auto"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>메인 홈으로 돌아가기</span>
-                </button>
-              </div>
-
-            </div>
-          </div>
-
-          {/* 메인 서브페이지 컨테이너 (사이드바 + 메인 콘텐츠) */}
-          <div className="max-w-6xl mx-auto px-6 py-16 grid lg:grid-cols-4 gap-12">
-            
-            {/* 좌측 카테고리 서브메뉴 사이드바 */}
-            <aside className="lg:col-span-1">
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 sticky top-28 shadow-sm">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 pb-3 border-b border-slate-100">
-                  {currentNavContext.categoryTitle} 메뉴
-                </h3>
-                <nav className="space-y-1">
-                  {currentNavContext.subMenus.map((sub, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleNavigate(sub.pageId, sub.externalUrl)}
-                      className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-between ${
-                        currentPage === sub.pageId
-                          ? 'bg-sky-600 text-white shadow-md shadow-sky-600/20'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <span>{sub.name}</span>
-                      <ChevronRight className={`w-3.5 h-3.5 ${currentPage === sub.pageId ? 'opacity-100' : 'opacity-40'}`} />
-                    </button>
-                  ))}
-                </nav>
-              </div>
-            </aside>
-
-            {/* 우측 개별 상세 콘텐츠 영역 */}
-            <main className="lg:col-span-3 space-y-12">
-              
-              {/* --- [대표 인사말 (ceo)] --- */}
-              {currentPage === 'ceo' && (
-                <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-10 space-y-8 shadow-sm">
-                  <div className="border-b border-slate-100 pb-6">
-                    <span className="text-xs font-bold text-sky-600 uppercase tracking-widest block mb-2">CEO Greeting</span>
-                    <h2 className="text-2xl md:text-3xl font-bold text-slate-900">미래 무인항공 산업을 선도하는 정직한 교육</h2>
-                  </div>
-
-                  <div className="space-y-4 text-slate-700 leading-relaxed text-sm md:text-base">
-                    <p>안녕하십니까, <strong className="text-slate-900">(주)브이톨테크 드론교육원 대표 정재영</strong>입니다.</p>
-                    <p>
-                      4차 산업혁명의 중심에 있는 무인항공기(드론) 기술은 이제 단순한 취미나 조종을 넘어, 측량, 농업, 방제, 재난 구조, 군사 정찰 등 산업 전반의 필수 핵심 인프라로 자리 잡았습니다.
-                    </p>
-                    <p>
-                      저희 브이톨테크 드론교육원은 국토교통부 지정 전문교육기관으로서, 수강생 여러분이 실제 시험을 치르는 자체 실기 비행장과 최신 수직이착륙(VTOL) 기체를 완비하고 있습니다. 베테랑 교관진의 1:1 밀착 코칭을 통해 최고의 합격률과 실무 역량을 약속드립니다.
-                    </p>
-                  </div>
-
-                  <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs text-slate-400 font-bold block">대표이사 / 원장</span>
-                      <span className="text-lg font-bold text-slate-900">{droneData.company.ceo}</span>
-                    </div>
-                    <div className="px-4 py-2 bg-sky-50 border border-sky-200 text-sky-700 text-xs font-bold rounded-xl">
-                      {droneData.company.cert}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* --- [교육원 특징 (about)] --- */}
-              {currentPage === 'about' && (
-                <div className="space-y-8">
-                  <div className="bg-white border border-slate-200 rounded-3xl p-8 space-y-6 shadow-sm">
-                    <h2 className="text-2xl font-bold text-slate-900">브이톨테크 드론교육원 핵심 경쟁력</h2>
-                    <div className="grid md:grid-cols-2 gap-6 pt-4">
-                      <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl">
-                        <Award className="w-8 h-8 text-sky-600 mb-4" />
-                        <h3 className="text-lg font-bold mb-2 text-slate-900">자체 실기 시험장 보유</h3>
-                        <p className="text-slate-600 text-xs leading-relaxed">
-                          훈련받던 익숙한 기체와 장소에서 실기 평가를 치르므로 비행 긴장감을 최소화하고 최상의 합격률을 기록합니다.
-                        </p>
-                      </div>
-                      <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl">
-                        <Users className="w-8 h-8 text-sky-600 mb-4" />
-                        <h3 className="text-lg font-bold mb-2 text-slate-900">1:1 베테랑 전담 지도</h3>
-                        <p className="text-slate-600 text-xs leading-relaxed">
-                          수강생 개인별 비행 감각에 맞춘 맞춤형 스케줄링과 비행 시뮬레이터 시스템을 사전에 무제한 지원합니다.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* --- [인증 현황 (cert)] --- */}
-              {currentPage === 'cert' && (
-                <div className="bg-white border border-slate-200 rounded-3xl p-8 space-y-6 shadow-sm">
-                  <h2 className="text-2xl font-bold text-slate-900">기관 지정 및 인증 현황</h2>
-                  <div className="space-y-4 pt-2">
-                    <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <FileCheck className="w-6 h-6 text-sky-600" />
-                        <div>
-                          <h4 className="font-bold text-slate-900">국토교통부 지정 무인항공기 전문교육기관</h4>
-                          <p className="text-xs text-slate-500">조종자 실기시험 자체 실시 지정 기관</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold text-sky-700 bg-sky-100 px-3 py-1.5 rounded-lg">인증 완료</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* --- [미디어/영상 갤러리 (media) - 회사소개로 이동 적용] --- */}
-              {currentPage === 'media' && (
-                <div className="space-y-8">
-                  <div className="bg-white border border-slate-200 rounded-3xl p-8 space-y-6 shadow-sm">
-                    <span className="text-xs font-bold text-sky-600 uppercase tracking-widest block mb-1">Company Media</span>
-                    <h2 className="text-2xl md:text-3xl font-bold text-slate-900">홍보 및 비행 영상 갤러리</h2>
-                    <p className="text-slate-600 text-sm">브이톨테크의 교육 현장과 실제 VTOL 비행 영상입니다.</p>
-
-                    <div className="grid sm:grid-cols-2 gap-6 pt-4">
-                      {droneData.promoVideos.map((video) => (
-                        <div 
-                          key={video.id}
-                          onClick={() => setSelectedVideo(video)}
-                          className="group cursor-pointer bg-white border border-slate-200 rounded-2xl overflow-hidden hover:border-sky-500 transition-all shadow-sm hover:shadow-md"
-                        >
-                          <div className="relative aspect-video bg-slate-100 overflow-hidden">
-                            <img 
-                              src={`https://img.youtube.com/vi/${video.id}/hqdefault.jpg`} 
-                              alt={video.title} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/10 transition-all">
-                              <div className="w-12 h-12 bg-sky-600 text-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                <Play className="w-5 h-5 fill-current ml-0.5" />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="p-4">
-                            <span className="text-[10px] font-bold text-sky-600 uppercase block mb-1">{video.category}</span>
-                            <h3 className="text-sm font-bold mb-1 text-slate-900 group-hover:text-sky-600 transition-colors">{video.title}</h3>
-                            <p className="text-slate-500 text-xs">{video.desc}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* --- [찾아오시는 길 (location)] --- */}
-              {currentPage === 'location' && (
-                <div className="bg-white border border-slate-200 rounded-3xl p-8 space-y-8 shadow-sm">
-                  <h2 className="text-2xl font-bold text-slate-900">교육원 위치 및 비행장 안내</h2>
-                  <div className="space-y-6">
-                    <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                      <span className="text-xs font-bold text-sky-600 uppercase">본원 (이론 및 상담)</span>
-                      <h3 className="text-lg font-bold text-slate-900">{droneData.company.location}</h3>
-                      <p className="text-xs text-slate-600">• 직통 문의: {droneData.company.phone}</p>
-                    </div>
-
-                    <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                      <span className="text-xs font-bold text-sky-600 uppercase">자체 실기 비행장</span>
-                      <h3 className="text-lg font-bold text-slate-900">{droneData.company.fieldAddress}</h3>
-                      <p className="text-xs text-slate-600">• 야외 드론 자격증 실기 시험 코스 연습장 및 시험 응시장</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* --- [드론 교육과정 개별 페이지들 (edu-vtol, edu-national, edu-instructor)] --- */}
-              {(currentPage === 'edu-vtol' || currentPage === 'edu-national' || currentPage === 'edu-instructor') && (
-                <div className="space-y-8">
-                  {droneData.courses.filter(c => c.id === currentPage).map((course) => (
-                    <div key={course.id} className="bg-white border border-slate-200 rounded-3xl p-8 space-y-8 shadow-sm">
-                      <div>
-                        <span className="text-xs font-bold text-sky-700 uppercase px-3 py-1 bg-sky-50 rounded-full border border-sky-200 mb-3 inline-block">
-                          {course.cat}
-                        </span>
-                        <h2 className="text-3xl font-bold text-slate-900 mb-3">{course.title}</h2>
-                        <p className="text-slate-600 text-sm leading-relaxed">{course.desc}</p>
-                      </div>
-
-                      <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
-                        <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-sky-600" /> 주요 커리큘럼 특징
-                        </h3>
-                        <div className="grid md:grid-cols-2 gap-3">
-                          {course.features.map((ft, idx) => (
-                            <div key={idx} className="p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-semibold flex items-center gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-sky-600" />
-                              <span>{ft}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="pt-4 flex flex-col sm:flex-row gap-4">
-                        <a 
-                          href={droneData.company.kakaoUrl} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="flex-1 py-4 bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold rounded-2xl transition-all text-center flex items-center justify-center gap-2 shadow-md shadow-amber-500/20"
-                        >
-                          <MessageCircle className="w-5 h-5 fill-amber-950 text-transparent" />
-                          <span>오픈카톡 1:1 수강 상담</span>
-                        </a>
-                        <a 
-                          href={droneData.company.instaUrl} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="py-4 px-8 bg-pink-50 hover:bg-pink-100 border border-pink-200 text-pink-700 font-bold rounded-2xl transition-all text-center flex items-center justify-center gap-2"
-                        >
-                          <Instagram className="w-5 h-5" />
-                          <span>인스타 DM 문의</span>
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* --- [자체 실기 시험장 (edu-field)] --- */}
-              {currentPage === 'edu-field' && (
-                <div className="bg-white border border-slate-200 rounded-3xl p-8 space-y-6 shadow-sm">
-                  <h2 className="text-2xl font-bold text-slate-900">자체 실기 시험장 시설 안내</h2>
-                  <p className="text-slate-600 text-sm leading-relaxed">
-                    브이톨테크 드론교육원은 넓은 전용 비행장과 안전망 시설을 완비하여 수강생들이 편안하게 비행 연습을 진행할 수 있으며, 교육받은 동일한 장소에서 실기 평가를 치릅니다.
-                  </p>
-                  <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-700 space-y-2">
-                    <p>• 위치: {droneData.company.fieldAddress}</p>
-                    <p>• 구비 시설: 규격 실기 비행장 코스 라인, 풍향계, 안전 대기소, 기체 점검 테이블</p>
-                  </div>
-                </div>
-              )}
-
-              {/* --- [사업분야 개별 페이지들 (biz-edu, biz-agri, biz-aerial, biz-maintenance)] --- */}
-              {(currentPage === 'biz-edu' || currentPage === 'biz-agri' || currentPage === 'biz-aerial' || currentPage === 'biz-maintenance') && (
-                <div className="space-y-8">
-                  {droneData.businessAreas.filter(b => b.id === currentPage).map((biz) => {
-                    const IconComp = biz.icon;
-                    return (
-                      <div key={biz.id} className="bg-white border border-slate-200 rounded-3xl p-8 space-y-6 shadow-sm">
-                        <div className="w-14 h-14 bg-sky-50 border border-sky-200 text-sky-600 rounded-2xl flex items-center justify-center">
-                          <IconComp className="w-7 h-7" />
-                        </div>
-                        <h2 className="text-3xl font-bold text-slate-900">{biz.title}</h2>
-                        <p className="text-slate-700 leading-relaxed text-sm md:text-base">{biz.desc}</p>
-                        
-                        <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl pt-4 space-y-3">
-                          <h4 className="text-xs font-bold text-sky-600 uppercase tracking-widest">비즈니스 실시간 상담</h4>
-                          <p className="text-xs text-slate-500">기업, 지자체, 농가 및 개인 프로젝트 문의는 아래 채널로 편하게 문의주세요.</p>
-                          <div className="flex flex-wrap gap-3 pt-2">
-                            <a 
-                              href={droneData.company.kakaoUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold text-xs rounded-xl transition-all inline-flex items-center gap-2"
-                            >
-                              <MessageCircle className="w-4 h-4 fill-amber-950 text-transparent" />
-                              <span>오픈카톡 상담 연결</span>
-                            </a>
-                            <a 
-                              href={droneData.company.instaUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="px-5 py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold text-xs rounded-xl transition-all inline-flex items-center gap-2"
-                            >
-                              <Instagram className="w-4 h-4" />
-                              <span>인스타그램 DM 문의</span>
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-            </main>
-          </div>
-        </div>
-      )}
-
-      {/* --- [5. 푸터 (밝은 톤 테마)] --- */}
-      <footer className="py-8 bg-white border-t border-slate-200 text-center text-xs text-slate-500 space-y-2">
-        <p>{droneData.company.name} | 대표: {droneData.company.ceo} | 주소: {droneData.company.location} | 연락처: {droneData.company.phone}</p>
-        <p>© 2026 {droneData.company.name}. All rights reserved.</p>
-      </footer>
-
-    </div>
-  );
+  &::before {
+    left: 0;
+    border-left-color: var(--border);
+  }
+  &::after {
+    right: 0;
+    border-right-color: var(--border);
+  }
 }

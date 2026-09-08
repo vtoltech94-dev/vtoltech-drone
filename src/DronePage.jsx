@@ -56,7 +56,7 @@ const Sprout = ({ className = "w-5 h-5", ...props }) => (
 );
 
 // =================================================================
-// 3. 브이톨테크 공식 데이터 세팅 (추후 유지보수 전용 영역)
+// 3. 브이톨테크 공식 데이터 세팅
 // =================================================================
 const droneData = {
   company: {
@@ -73,15 +73,15 @@ const droneData = {
     instaUrl: "https://www.instagram.com/vtoltech_drone/"
   },
   
-  // 🌟 메인 히어로 배경 비디오 경로
+  // 메인 배경 로컬 비디오
   heroVideo: "/video/main.mp4",
 
-  // 🌟 인증서 이미지 데이터
+  // 🌟 [인증서 데이터] 공식 명칭 1:1 매핑
   certImages: [
-    "/images/certification/1.jpg",
-    "/images/certification/2.jpg",
-    "/images/certification/3.jpg",
-    "/images/certification/4.jpg"
+    { src: "/images/certification/1.jpg", title: "사업자등록증" },
+    { src: "/images/certification/2.jpg", title: "초경량비행 장치사용 사업등록증" },
+    { src: "/images/certification/3.jpg", title: "훈련이수증명(실기평가조종자)" },
+    { src: "/images/certification/4.jpg", title: "마산대학교 협약서" }
   ],
 
   // 상단 내비게이션 메뉴 구조
@@ -91,7 +91,7 @@ const droneData = {
       title: "회사소개",
       subMenus: [
         { name: "대표 인사말", pageId: "ceo", bgImg: "/images/main/전경 촬영 1.jpg" },
-        { name: "교육원 특징", pageId: "about", bgImg: "/images/main/전경 촬영 2.jpg" },
+        { name: "교육원 특징", pageId: "about", bgImg: "/images/main/전경촬영 2.jpg" },
         { name: "인증 현황", pageId: "cert", bgImg: "/images/main/전경 촬영 3.jpg" },
         { name: "홍보 및 비행 영상", pageId: "media", bgImg: "/images/main/전경 촬영 4.jpg" },
         { name: "찾아오시는 길", pageId: "location", bgImg: "/images/main/전경 촬영 1.jpg" }
@@ -231,7 +231,7 @@ const droneData = {
     }
   ],
 
-  // 홍보 영상 데이터 (팝업 모달 연결용)
+  // 홍보 영상 데이터
   promoVideos: [
     {
       id: "dYZg47ddagM",
@@ -267,13 +267,14 @@ export default function DronePage() {
   const [hoveredNav, setHoveredNav] = useState(null);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null);
 
-  // 이미지 라이트박스 모달 상태
+  // 라이트박스 상태 관리
   const [lightboxImages, setLightboxImages] = useState([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-  const openLightbox = (imagesArray, index) => {
-    setLightboxImages(imagesArray);
+  const openLightbox = (itemsArray, index) => {
+    const formatted = itemsArray.map(item => (typeof item === 'string' ? item : item.src));
+    setLightboxImages(formatted);
     setLightboxIndex(index);
     setIsLightboxOpen(true);
   };
@@ -307,7 +308,7 @@ export default function DronePage() {
         setCurrentPage(pageTarget);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (err) {
-        console.error("Hash routing error:", err);
+        console.error("Hash sync error:", err);
       }
     };
 
@@ -354,43 +355,48 @@ export default function DronePage() {
     };
   }, [currentPage]);
 
-  // 스마트 갤러리 그리드 렌더러
-  const renderGalleryGrid = (images) => {
-    if (!images || !Array.isArray(images) || images.length === 0) return null;
-    const isOddTotal = images.length % 2 !== 0;
+  // 🛡️ [스마트 동적 갤러리 그리드]
+  const renderGalleryGrid = (items) => {
+    if (!items || !Array.isArray(items) || items.length === 0) return null;
+    
+    const isOddTotal = items.length % 2 !== 0;
 
     return (
       <div className="grid sm:grid-cols-2 gap-4">
-        {images.map((imgPath, imgIdx) => {
-          const isLastAndOdd = isOddTotal && imgIdx === images.length - 1;
+        {items.map((item, imgIdx) => {
+          const isLastAndOdd = isOddTotal && imgIdx === items.length - 1;
+          const imgPath = typeof item === 'string' ? item : item.src;
+          const displayTitle = typeof item === 'string' 
+            ? (isLastAndOdd ? `하이라이트 현장 보기 (${imgIdx + 1})` : `갤러리 ${imgIdx + 1}`)
+            : item.title;
 
           return (
             <div 
               key={imgIdx} 
-              onClick={() => openLightbox(images, imgIdx)}
+              onClick={() => openLightbox(items, imgIdx)}
               className={`bg-slate-900 rounded-2xl overflow-hidden aspect-video cursor-pointer group relative shadow-md hover:shadow-xl transition-all ${
                 isLastAndOdd ? 'sm:col-span-2 aspect-[21/9]' : ''
               }`}
             >
               <img 
                 src={getAssetUrl(imgPath)} 
-                alt={`갤러리 이미지 ${imgIdx + 1}`} 
+                alt={displayTitle} 
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90" 
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
-                  if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                  if(e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-4">
                 <span className="text-white font-bold text-sm tracking-tight drop-shadow-sm">
-                  {isLastAndOdd ? `하이라이트 현장 보기 (${imgIdx + 1})` : `갤러리 ${imgIdx + 1}`}
+                  {displayTitle}
                 </span>
               </div>
               <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
                 <ZoomIn className="w-4 h-4" />
               </div>
               <div className="hidden w-full h-full items-center justify-center text-xs text-slate-400 p-4 text-center">
-                [이미지 {imgIdx + 1}]
+                [{displayTitle}]
               </div>
             </div>
           );
@@ -402,7 +408,7 @@ export default function DronePage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans break-keep selection:bg-sky-600 selection:text-white">
       
-      {/* --- 라이트박스 확대 모달 --- */}
+      {/* --- [0. 이미지 전체화면 확대 라이트박스] --- */}
       {isLightboxOpen && lightboxImages.length > 0 && (
         <div 
           className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 md:p-12 animate-in fade-in duration-200"
@@ -453,7 +459,7 @@ export default function DronePage() {
         </div>
       )}
 
-      {/* --- 상단 내비게이션 바 --- */}
+      {/* --- [1. 상단 내비게이션 바] --- */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           
@@ -602,7 +608,7 @@ export default function DronePage() {
         )}
       </header>
 
-      {/* --- [유튜브 비디오 팝업 모달] --- */}
+      {/* --- [2. 유튜브 비디오 팝업 모달] --- */}
       {selectedVideo && (
         <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8 duration-200">
           <div className="relative w-full max-w-4xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl">
@@ -632,14 +638,12 @@ export default function DronePage() {
         </div>
       )}
 
-      {/* --- [메인 랜딩 화면 - 직접 업로드 비디오 백그라운드 적용] --- */}
+      {/* --- [3. 메인 랜딩 화면] --- */}
       {currentPage === 'home' && (
         <>
           <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden border-b border-slate-200 py-20 bg-slate-950">
-            {/* 어두운 오버레이 그라데이션 (가독성 확보) */}
             <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-900/80 to-slate-900/40 z-10" />
             
-            {/* 🌟 로컬 동영상 배경 재생 */}
             <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden flex items-center justify-center">
               <video
                 autoPlay
@@ -668,7 +672,6 @@ export default function DronePage() {
                 {droneData.company.slogan}. 자체 실기 시험장과 최신 VTOL 기체 완비로 최상위 합격률을 약속합니다.
               </p>
               
-              {/* 버튼 그룹: 홍보영상 시청(모달 팝업) & 카톡 상담 */}
               <div className="flex flex-wrap gap-4">
                 <button 
                   onClick={() => setSelectedVideo(droneData.promoVideos[0])}
@@ -737,7 +740,7 @@ export default function DronePage() {
         </>
       )}
 
-      {/* --- [서브페이지 레이아웃] --- */}
+      {/* --- [4. 서브페이지 레이아웃] --- */}
       {currentPage !== 'home' && currentNavContext && (
         <div className="duration-300">
           
@@ -861,6 +864,7 @@ export default function DronePage() {
                 </div>
               )}
 
+              {/* 🌟 인증 현황 4대 공식 명칭 갤러리 렌더링 */}
               {currentPage === 'cert' && (
                 <div className="bg-white border border-slate-200 rounded-3xl p-8 space-y-8 shadow-sm">
                   <div>
@@ -974,7 +978,7 @@ export default function DronePage() {
                 </div>
               )}
 
-              {/* 교육과정 개별 상세 */}
+              {/* 교육과정 개별 탭 */}
               {(currentPage === 'edu-vtol' || currentPage === 'edu-national' || currentPage === 'edu-instructor' || currentPage === 'edu-sports') && (
                 <div className="space-y-8">
                   {droneData.courses.filter(c => c.id === currentPage).map((course) => (
@@ -1058,7 +1062,7 @@ export default function DronePage() {
         </div>
       )}
 
-      {/* --- [푸터] --- */}
+      {/* --- [5. 푸터] --- */}
       <footer className="py-8 bg-white border-t border-slate-200 text-center text-xs text-slate-500 space-y-2">
         <p>{droneData.company.name} | 대표: {droneData.company.ceo} | 주소: {droneData.company.location} | 연락처: {droneData.company.phone}</p>
         <p>© 2026 {droneData.company.name}. All rights reserved.</p>
