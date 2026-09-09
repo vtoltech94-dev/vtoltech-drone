@@ -8,5 +8,5 @@ export default defineConfig({
     react(),
     tailwindcss(), // Tailwind v4 플러그인 유지
   ],
-  base: '/vtoltech-drone/', // GitHub 저장소 이름과 정확히 일치하는 서브 경로
+  base: '/',
 })
